@@ -1,127 +1,81 @@
 package br.ufpe.cin.if710.rss
 
-import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
-import kotlinx.android.synthetic.main.itemlista.view.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
-import java.io.IOException
-import java.io.InputStream
-import java.net.HttpURLConnection
-import java.net.URL
+import android.widget.LinearLayout
+import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : Activity() {
+import android.support.v7.app.AppCompatActivity
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 
-    //ao fazer envio da resolucao, use este link no seu codigo!
-    //private val RSS_FEED = "http://leopoldomt.com/if1001/g1brasil.xml"
+class MainActivity : AppCompatActivity() {
 
-    //OUTROS LINKS PARA TESTAR...
-    //http://rss.cnn.com/rss/edition.rss
-    //http://pox.globo.com/rss/g1/brasil/
-    //http://pox.globo.com/rss/g1/ciencia-e-saude/
-    //http://pox.globo.com/rss/g1/tecnologia/
+    private val intentFilter = IntentFilter("br.ufpe.cin.if710.broadcasts.dinamico")
+    private val receiver = DynamicReceiver()
 
-    //use ListView ao invés de TextView - deixe o atributo com o mesmo nome
-    internal var conteudoRSS: RecyclerView? = null
-    private var rssAdapter: RSSAdapter? = null
-    internal var listaRSS: List<ItemRSS>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        conteudoRSS = findViewById(R.id.conteudoRSS)
 
-        listaRSS = emptyList()
-        rssAdapter = RSSAdapter(listaRSS)
+        setSupportActionBar(mainToolbar)
 
-        conteudoRSS = RecyclerView(this).apply {
-            setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(applicationContext)
-            adapter = rssAdapter
-        }
-        setContentView(conteudoRSS)
+        conteudoRSS.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
+
+        val getRSSService = Intent(applicationContext, GetRSSService::class.java)
+
+        startService(getRSSService)
+
+        registerReceiver(receiver, intentFilter)
+
+
 
     }
 
-    //Funçao de chamada de rede dentro do DoAsync para ser executada em outra thread
-    override fun onStart() {
-        super.onStart()
-        doAsync {
-            try {
-                val feedXML = getRssFeed(getString(R.string.rssfeed))
-                uiThread {
-                    val readXML =  ParserRSS.parse(feedXML)
-                    rssAdapter = RSSAdapter(readXML)
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(receiver)
+    }
 
-                }
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
+
+    companion object {
+        val RSS = "rssfeed"
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.action_settings -> {
+            startActivity(Intent(
+                    this@MainActivity,
+                    PrefsMenuActivity::class.java))
+            true
+        }
+        else -> {
+
+            super.onOptionsItemSelected(item)
         }
     }
 
-    @Throws(IOException::class)
-    private fun getRssFeed(feed: String): String {
-        var `in`: InputStream? = null
-        var rssFeed = ""
-        try {
-            val url = URL(feed)
-            val conn = url.openConnection() as HttpURLConnection
-            `in` = conn.inputStream
-            val response = `in`.readBytes()
-            rssFeed = String(response, charset("UTF-8"))
-        } finally {
-            `in`?.close()
-        }
-        return rssFeed
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
     }
 
-    //adicionar Adapter
-    private inner class RSSAdapter(private val rsss: List<ItemRSS>?) : RecyclerView.Adapter<CardChangeHolder>() {
+    inner class DynamicReceiver: BroadcastReceiver() {
+        private val TAG = "DynamicReceiver"
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CardChangeHolder {
-            val v = layoutInflater.inflate(R.layout.itemlista, parent, false)
-            return CardChangeHolder(v)
-        }
+        override fun onReceive(context: Context, intent: Intent) {
+            Log.e("teste", "recebido")
+            val dbHelper = SQLiteRSSHelper.getInstance(applicationContext)
+            val selectResult = dbHelper.getItems()
+            conteudoRSS.adapter = RSSAdapter(selectResult)
 
-        override fun onBindViewHolder(holder: CardChangeHolder, position: Int) {
-            val item = listaRSS?.get(position)
-            holder.title?.text = item?.title
-            holder.date?.text = item?.pubDate
-        }
-
-        override fun getItemCount(): Int {
-            if (rsss!=null)
-                return rsss.size
-            else
-                return 0
-        }
-    }
-
-    //adicionar Holder
-    internal class CardChangeHolder
-    (row: View) : RecyclerView.ViewHolder(row), View.OnClickListener {
-        var title: TextView? = null
-        var date: TextView? = null
-
-        init {
-
-            this.title = row.item_titulo
-            this.date = row.item_data
-
-        }
-
-        fun bindModel(p: ItemRSS?) {
-            title?.text = p?.title
-            date?.text = p?.pubDate
-        }
-
-        override fun onClick(v: View) {
         }
     }
 

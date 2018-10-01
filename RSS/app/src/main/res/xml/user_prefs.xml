@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="pref_screen">
+    <PreferenceCategory android:title="Change RSS Feed">
+        <EditTextPreference
+        android:key="rssfeed"
+        android:dialogMessage="Enter the RSS Link"
+        android:dialogTitle="Change RSS Link"
+        android:negativeButtonText="Cancelar"
+        android:positiveButtonText="Enviar"
+        android:title="RSS Link"
+        android:defaultValue="http://leopoldomt.com/if1001/g1brasil.xml">
+        </EditTextPreference>
+    </PreferenceCategory>
+</PreferenceScreen>
