@@ -1,6 +1,5 @@
 package br.ufpe.cin.if710.rss
 
-import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
@@ -8,7 +7,6 @@ import android.database.SQLException
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
-
 
 class SQLiteRSSHelper private constructor(
     //alternativa
@@ -84,7 +82,6 @@ class SQLiteRSSHelper private constructor(
         //Versão atual do banco
         private val DB_VERSION = 1
 
-        @SuppressLint("StaticFieldLeak")
         private var db: SQLiteRSSHelper? = null
 
         //Definindo Singleton

@@ -15,29 +15,23 @@ import java.net.URL
 class GetRSSService: IntentService("GetRSSService") {
 
     public override fun onHandleIntent(i: Intent?) {
-        Log.e("teste", "SERVICE INICIADO")
-        val dbHelper =  SQLiteRSSHelper.getInstance(applicationContext)
 
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        val rss_url = prefs.getString(MainActivity.RSS, "nada escolhido...")
-        doAsync {
-            try {
-                val feedXML = getRssFeed(rss_url)
-                val rss = ParserRSS.parse(feedXML)
+        val rss_url = prefs.getString(MainActivity.RSS, "http://leopoldomt.com/if1001/g1brasil.xml")
 
-                rss.forEach { dbHelper.insertItem(it) }
-                Log.e("teste", "cadastro finalizado")
+        try {
+            val dbHelper = SQLiteRSSHelper.getInstance(applicationContext)
+            val feedXML = getRssFeed(rss_url)
+            val rss = ParserRSS.parse(feedXML)
+            rss.forEach { dbHelper.insertItem(it) }
 
 
-            } catch (e: IOException) {
-                e.printStackTrace()
-                Log.e("teste", "ERRRORRR")
+        } catch (e: IOException) {
+            e.printStackTrace()
 
-            } finally {
-                //sendBroadcast(Intent("br.ufpe.cin.if710.broadcasts.dinamico"))
-            }
-            uiThread {  }
+        } finally {
+            sendBroadcast(Intent("br.ufpe.cin.if710.broadcasts.dinamico"))
         }
 
     }

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.v7.widget.LinearLayoutManager
 import android.widget.LinearLayout
 import kotlinx.android.synthetic.main.activity_main.*
@@ -34,8 +35,6 @@ class MainActivity : AppCompatActivity() {
         startService(getRSSService)
 
         registerReceiver(receiver, intentFilter)
-
-
 
     }
 
@@ -71,7 +70,6 @@ class MainActivity : AppCompatActivity() {
         private val TAG = "DynamicReceiver"
 
         override fun onReceive(context: Context, intent: Intent) {
-            Log.e("teste", "recebido")
             val dbHelper = SQLiteRSSHelper.getInstance(applicationContext)
             val selectResult = dbHelper.getItems()
             conteudoRSS.adapter = RSSAdapter(selectResult)
